@@ -12,12 +12,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -91,8 +89,7 @@ fun EmailListScreen() {
 fun EmailItem(email: Email, onImportantToggle: () -> Unit) {
     Card(
         modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onImportantToggle() },
+            .fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
         shape = MaterialTheme.shapes.medium
@@ -100,16 +97,16 @@ fun EmailItem(email: Email, onImportantToggle: () -> Unit) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(text = email.subject, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurface)
-                if (email.isImportant) {
-                    Icon(
-                        imageVector = Icons.Default.Star,
-                        contentDescription = "Important",
-                        tint = Color.Yellow
-                    )
-                }
+                Icon(
+                    imageVector = if (email.isImportant) Icons.Filled.Star else Icons.Outlined.StarBorder,
+                    contentDescription = "Important",
+                    tint = Color.Yellow,
+                    modifier = Modifier.clickable { onImportantToggle() }
+                )
             }
             Text(text = email.sender, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
             if (email.tags.isNotEmpty()) {
@@ -132,7 +129,6 @@ fun EmailItem(email: Email, onImportantToggle: () -> Unit) {
         }
     }
 }
-
 
 @Preview(showBackground = true)
 @Composable

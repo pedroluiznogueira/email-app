@@ -8,22 +8,22 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
 // Define custom colors
-private val RedPrimary = Color(0xFFD32F2F)
-private val RedSecondary = Color(0xFFC2185B)
+private val BluePrimary = Color(0xFF192D9B)
+private val BlueSecondary = Color(0xFF2196F3)
 private val BlackOnSurface = Color(0xFF000000)
 private val WhiteOnPrimary = Color(0xFFFFFFFF)
 
 private val DarkColorScheme = darkColorScheme(
-    primary = RedPrimary,
-    secondary = RedSecondary,
+    primary = BluePrimary,
+    secondary = BlueSecondary,
     onPrimary = WhiteOnPrimary,
     onSecondary = WhiteOnPrimary,
     onSurface = WhiteOnPrimary
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = RedPrimary,
-    secondary = RedSecondary,
+    primary = BluePrimary,
+    secondary = BlueSecondary,
     onPrimary = WhiteOnPrimary,
     onSecondary = WhiteOnPrimary,
     onSurface = BlackOnSurface
