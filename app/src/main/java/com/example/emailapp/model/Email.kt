@@ -1,4 +1,4 @@
-package com.example.emailapp
+package com.example.emailapp.model
 
 data class Email(
     val id: Int,
