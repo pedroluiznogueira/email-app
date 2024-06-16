@@ -14,6 +14,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarBorder
@@ -28,14 +29,16 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
 import com.example.emailapp.ui.theme.EmailAppTheme
+import java.time.LocalDate
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             EmailAppTheme {
-                MyApp()
+                AppNavigation()
             }
         }
     }
@@ -44,7 +47,7 @@ class MainActivity : ComponentActivity() {
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MyApp() {
+fun MyApp(navController: NavHostController) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -57,14 +60,14 @@ fun MyApp() {
         },
         content = { paddingValues ->
             Box(modifier = Modifier.padding(paddingValues)) {
-                EmailListScreen()
+                EmailListScreen(navController)
             }
         }
     )
 }
 
 @Composable
-fun EmailListScreen() {
+fun EmailListScreen(navController: NavHostController) {
     var emails by remember { mutableStateOf(listOf(
         Email(1, "Meeting Schedule", "boss@example.com", true, listOf("Work")),
         Email(2, "Lunch with Friends", "friend@example.com", false, listOf("Personal")),
@@ -93,6 +96,10 @@ fun EmailListScreen() {
             FilterDropdown(selectedTag) { newTag ->
                 selectedTag = newTag
             }
+        }
+
+        Button(onClick = { navController.navigate("calendar") }) {
+            Text("Go to Calendar")
         }
 
         LazyColumn(
@@ -204,7 +211,11 @@ fun EmailItem(email: Email, onImportantToggle: () -> Unit) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = email.subject, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurface)
+                Text(
+                    text = email.subject,
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
                 Icon(
                     imageVector = if (email.isImportant) Icons.Filled.Star else Icons.Outlined.StarBorder,
                     contentDescription = "Important",
@@ -212,7 +223,11 @@ fun EmailItem(email: Email, onImportantToggle: () -> Unit) {
                     modifier = Modifier.clickable { onImportantToggle() }
                 )
             }
-            Text(text = email.sender, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
+            Text(
+                text = email.sender,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
             if (email.tags.isNotEmpty()) {
                 Row(
                     modifier = Modifier.padding(top = 8.dp),
@@ -228,8 +243,96 @@ fun EmailItem(email: Email, onImportantToggle: () -> Unit) {
                             style = MaterialTheme.typography.bodySmall
                         )
                     }
+
                 }
             }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CalendarScreen(navController: NavHostController) {
+    val events = remember { mutableStateMapOf<LocalDate, MutableList<String>>() }
+    var selectedDate by remember { mutableStateOf(LocalDate.now()) }
+    var showDialog by remember { mutableStateOf(false) }
+    var newEvent by remember { mutableStateOf("") }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Calendar") },
+                navigationIcon = {
+                    IconButton(onClick = { navController.navigateUp() }) {
+                        Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back")
+                    }
+                }
+            )
+        },
+        content = { paddingValues ->
+            Box(modifier = Modifier.padding(paddingValues)) {
+                Column {
+                    // Display calendar
+                    CalendarView(
+                        selectedDate = selectedDate,
+                        onDateSelected = {
+                            selectedDate = it
+                            showDialog = true
+                        }
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    // Display events for the selected date
+                    events[selectedDate]?.forEach { event ->
+                        Text(text = event, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(8.dp))
+                    }
+                }
+            }
+        }
+    )
+
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            title = { Text("Add Event") },
+            text = {
+                Column {
+                    Text("Event on ${selectedDate}")
+                    TextField(value = newEvent, onValueChange = { newEvent = it }, placeholder = { Text("Event description") })
+                }
+            },
+            confirmButton = {
+                Button(onClick = {
+                    events.getOrPut(selectedDate) { mutableListOf() }.add(newEvent)
+                    showDialog = false
+                    newEvent = ""
+                }) {
+                    Text("Add")
+                }
+            },
+            dismissButton = {
+                Button(onClick = { showDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+}
+
+@Composable
+fun CalendarView(selectedDate: LocalDate, onDateSelected: (LocalDate) -> Unit) {
+    // Here, you can use a library or build your own simple calendar view
+    // For demonstration, let's use a simple text-based month view
+
+    Column {
+        Text(text = selectedDate.month.name, style = MaterialTheme.typography.headlineMedium, modifier = Modifier.padding(8.dp))
+        for (day in 1..selectedDate.lengthOfMonth()) {
+            val date = LocalDate.of(selectedDate.year, selectedDate.month, day)
+            Text(
+                text = date.dayOfMonth.toString(),
+                modifier = Modifier
+                    .clickable { onDateSelected(date) }
+                    .padding(8.dp)
+            )
         }
     }
 }
@@ -238,6 +341,6 @@ fun EmailItem(email: Email, onImportantToggle: () -> Unit) {
 @Composable
 fun DefaultPreview() {
     EmailAppTheme {
-        MyApp()
+        AppNavigation()
     }
 }
