@@ -30,6 +30,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.example.emailapp.ui.theme.EmailAppTheme
 import java.time.LocalDate
 
@@ -296,7 +299,7 @@ fun CalendarScreen(navController: NavHostController) {
             title = { Text("Add Event") },
             text = {
                 Column {
-                    Text("Event on ${selectedDate}")
+                    Text("Event on $selectedDate")
                     TextField(value = newEvent, onValueChange = { newEvent = it }, placeholder = { Text("Event description") })
                 }
             },
@@ -320,19 +323,46 @@ fun CalendarScreen(navController: NavHostController) {
 
 @Composable
 fun CalendarView(selectedDate: LocalDate, onDateSelected: (LocalDate) -> Unit) {
-    // Here, you can use a library or build your own simple calendar view
-    // For demonstration, let's use a simple text-based month view
+    val daysInMonth = selectedDate.lengthOfMonth()
+    val firstDayOfMonth = LocalDate.of(selectedDate.year, selectedDate.month, 1)
+    val firstDayOfWeek = firstDayOfMonth.dayOfWeek.value % 7 // Adjusting to start week from Sunday
 
     Column {
-        Text(text = selectedDate.month.name, style = MaterialTheme.typography.headlineMedium, modifier = Modifier.padding(8.dp))
-        for (day in 1..selectedDate.lengthOfMonth()) {
-            val date = LocalDate.of(selectedDate.year, selectedDate.month, day)
-            Text(
-                text = date.dayOfMonth.toString(),
-                modifier = Modifier
-                    .clickable { onDateSelected(date) }
-                    .padding(8.dp)
-            )
+        Text(
+            text = selectedDate.month.name,
+            style = MaterialTheme.typography.headlineMedium,
+            modifier = Modifier.padding(8.dp)
+        )
+        for (week in 0 until 5) { // Assuming 5 weeks per month
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                for (day in 1..7) {
+                    val dayOfMonth = week * 7 + day - firstDayOfWeek
+                    if (dayOfMonth in 1..daysInMonth) {
+                        val date = LocalDate.of(selectedDate.year, selectedDate.month, dayOfMonth)
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .background(Color.LightGray)
+                                .clickable { onDateSelected(date) },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = dayOfMonth.toString(),
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .background(Color.Transparent),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            // Empty box for padding days
+                        }
+                    }
+                }
+            }
         }
     }
 }
