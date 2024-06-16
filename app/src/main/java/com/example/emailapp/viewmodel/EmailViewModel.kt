@@ -1,15 +1,28 @@
 package com.example.emailapp.viewmodel
 
-import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
-import com.example.emailapp.model.Email
+import androidx.lifecycle.viewModelScope
+import com.example.emailapp.model.EmailEntity
+import com.example.emailapp.repository.Repository
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
-class EmailViewModel : ViewModel() {
-    var emails = mutableStateListOf(
-        Email(1, "Meeting Schedule", "boss@example.com", true, listOf("Work")),
-        Email(2, "Lunch with Friends", "friend@example.com", false, listOf("Personal")),
-        Email(3, "Project Update", "colleague@example.com", false, listOf("Work")),
-        Email(4, "Invitation to Event", "event@invite.com", false, listOf("Events")),
-        Email(5, "Newsletter", "newsletter@example.com", false, listOf("Promotions")),
-    )
+class EmailViewModel(private val repository: Repository) : ViewModel() {
+    private val _emails = MutableStateFlow<List<EmailEntity>>(emptyList())
+    val emails = _emails.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            repository.allEmails.collect {
+                _emails.value = it
+            }
+        }
+    }
+
+    fun addEmail(email: EmailEntity) {
+        viewModelScope.launch {
+            repository.insertEmail(email)
+        }
+    }
 }

@@ -36,7 +36,9 @@ fun SearchBar(
             keyboardType = KeyboardType.Text
         ),
         keyboardActions = KeyboardActions(
-            onSearch = { /* If needed, handle a specific search action that needs to be triggered only when the search icon is pressed */ }
+            onSearch = { /* If needed, handle a specific
+            search action that needs to be triggered only
+            when the search icon is pressed */ }
         ),
         decorationBox = { innerTextField ->
             Row(

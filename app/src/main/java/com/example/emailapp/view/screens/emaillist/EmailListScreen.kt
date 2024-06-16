@@ -8,18 +8,22 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavHostController
-import com.example.emailapp.viewmodel.EmailViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
+import com.example.emailapp.model.EmailEntity
+import com.example.emailapp.viewmodel.EmailViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EmailListScreen(navController: NavHostController) {
-    val viewModel: EmailViewModel = viewModel()
-    val emails = viewModel.emails
+fun EmailListScreen(navController: NavHostController, viewModel: EmailViewModel) {
+    val emails by viewModel.emails.collectAsState(initial = emptyList())
 
     var searchQuery by remember { mutableStateOf("") }
     var selectedTag by remember { mutableStateOf("All") }
+    var showDialog by remember { mutableStateOf(false) }
+    var newEmailSubject by remember { mutableStateOf("") }
+    var newEmailSender by remember { mutableStateOf("") }
+    var newEmailTags by remember { mutableStateOf("") }
 
     Column {
         Row(
@@ -40,8 +44,16 @@ fun EmailListScreen(navController: NavHostController) {
             }
         }
 
-        Button(onClick = { navController.navigate("calendar") }) {
-            Text("Go to Calendar")
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Button(onClick = { navController.navigate("calendar") }) {
+                Text("Go to Calendar")
+            }
+            Button(onClick = { showDialog = true }) {
+                Text("Add Email")
+            }
         }
 
         LazyColumn(
@@ -59,11 +71,60 @@ fun EmailListScreen(navController: NavHostController) {
                 EmailItem(
                     email = email,
                     onImportantToggle = {
-                        val index = emails.indexOf(email)
-                        viewModel.emails[index] = email.copy(isImportant = !email.isImportant)
+                        viewModel.addEmail(email.copy(isImportant = !email.isImportant))
                     }
                 )
             }
         }
+    }
+
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            title = { Text("Add New Email") },
+            text = {
+                Column {
+                    TextField(
+                        value = newEmailSubject,
+                        onValueChange = { newEmailSubject = it },
+                        label = { Text("Subject") }
+                    )
+                    TextField(
+                        value = newEmailSender,
+                        onValueChange = { newEmailSender = it },
+                        label = { Text("Sender") }
+                    )
+                    TextField(
+                        value = newEmailTags,
+                        onValueChange = { newEmailTags = it },
+                        label = { Text("Tags (comma separated)") }
+                    )
+                }
+            },
+            confirmButton = {
+                Button(onClick = {
+                    val tags = newEmailTags.split(",").map { it.trim() }
+                    val newEmail = EmailEntity(
+                        id = (emails.maxOfOrNull { it.id } ?: 0) + 1,
+                        subject = newEmailSubject,
+                        sender = newEmailSender,
+                        isImportant = false,
+                        tags = tags
+                    )
+                    viewModel.addEmail(newEmail)
+                    showDialog = false
+                    newEmailSubject = ""
+                    newEmailSender = ""
+                    newEmailTags = ""
+                }) {
+                    Text("Add")
+                }
+            },
+            dismissButton = {
+                Button(onClick = { showDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }

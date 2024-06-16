@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
@@ -19,6 +20,7 @@ fun FilterDropdown(selectedTag: String, onTagSelected: (String) -> Unit) {
 
     Box(
         modifier = Modifier
+            .width(120.dp)
             .background(MaterialTheme.colorScheme.surface, MaterialTheme.shapes.small)
             .padding(horizontal = 16.dp, vertical = 12.dp)
             .clickable { expanded = !expanded }

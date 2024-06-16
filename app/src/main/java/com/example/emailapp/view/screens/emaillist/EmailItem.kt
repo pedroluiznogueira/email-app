@@ -13,10 +13,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.example.emailapp.model.Email
+import com.example.emailapp.model.EmailEntity
 
 @Composable
-fun EmailItem(email: Email, onImportantToggle: () -> Unit) {
+fun EmailItem(email: EmailEntity, onImportantToggle: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth(),

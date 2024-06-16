@@ -12,16 +12,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.example.emailapp.model.EventEntity
 import com.example.emailapp.viewmodel.CalendarViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import java.time.LocalDate
 import java.time.YearMonth
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CalendarScreen(navController: NavHostController) {
-    val viewModel: CalendarViewModel = viewModel()
-    val events = viewModel.events
+fun CalendarScreen(navController: NavHostController, viewModel: CalendarViewModel) {
+    val events by viewModel.events.collectAsState()
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
     var showDialog by remember { mutableStateOf(false) }
     var newEvent by remember { mutableStateOf("") }
@@ -67,6 +66,7 @@ fun CalendarScreen(navController: NavHostController) {
                         selectedDate = selectedDate,
                         onDateSelected = {
                             selectedDate = it
+                            viewModel.getEventsForDate(it)
                             showDialog = true
                         }
                     )
@@ -84,8 +84,8 @@ fun CalendarScreen(navController: NavHostController) {
                     ) {
                         events[selectedDate]?.let { eventList ->
                             items(eventList) { event ->
-                                EventItem(event) {
-                                    events[selectedDate]?.remove(event)
+                                EventItem(event.description) {
+                                    // Handle event deletion if necessary
                                 }
                             }
                         }
@@ -107,7 +107,7 @@ fun CalendarScreen(navController: NavHostController) {
             },
             confirmButton = {
                 Button(onClick = {
-                    events.getOrPut(selectedDate) { mutableListOf() }.add(newEvent)
+                    viewModel.addEvent(EventEntity(date = selectedDate, description = newEvent))
                     showDialog = false
                     newEvent = ""
                 }) {
