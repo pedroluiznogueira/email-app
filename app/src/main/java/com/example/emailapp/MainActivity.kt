@@ -10,7 +10,11 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.*
@@ -19,6 +23,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -65,22 +71,120 @@ fun EmailListScreen() {
         Email(3, "Project Update", "colleague@example.com", false, listOf("Work")),
         Email(4, "Invitation to Event", "event@invite.com", false, listOf("Events")),
         Email(5, "Newsletter", "newsletter@example.com", false, listOf("Promotions")),
-        // Add more emails as needed
     )) }
 
-    LazyColumn(
-        modifier = Modifier.fillMaxSize().padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        items(emails) { email ->
-            EmailItem(
-                email = email,
-                onImportantToggle = {
-                    emails = emails.map {
-                        if (it.id == email.id) it.copy(isImportant = !it.isImportant) else it
-                    }
+    var searchQuery by remember { mutableStateOf("") }
+    var selectedTag by remember { mutableStateOf("All") }
+
+    Column {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Box(modifier = Modifier.weight(1f)) {
+                SearchBar(searchQuery) { newQuery ->
+                    searchQuery = newQuery
                 }
-            )
+            }
+            Spacer(modifier = Modifier.width(8.dp))
+            FilterDropdown(selectedTag) { newTag ->
+                selectedTag = newTag
+            }
+        }
+
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            val filteredEmails = emails.filter {
+                (it.subject.contains(searchQuery, ignoreCase = true) ||
+                        it.sender.contains(searchQuery, ignoreCase = true)) &&
+                        (selectedTag == "All" || it.tags.contains(selectedTag))
+            }
+            items(filteredEmails) { email ->
+                EmailItem(
+                    email = email,
+                    onImportantToggle = {
+                        emails = emails.map {
+                            if (it.id == email.id) it.copy(isImportant = !it.isImportant) else it
+                        }
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun SearchBar(
+    query: String,
+    onQueryChange: (String) -> Unit
+) {
+    BasicTextField(
+        value = query,
+        onValueChange = onQueryChange,
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surface, MaterialTheme.shapes.small)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        textStyle = MaterialTheme.typography.bodyMedium,
+        keyboardOptions = KeyboardOptions.Default.copy(
+            imeAction = ImeAction.Search,
+            keyboardType = KeyboardType.Text
+        ),
+        keyboardActions = KeyboardActions(
+            onSearch = { /* If needed, handle a specific
+            search action that needs to be triggered only
+            when the search icon is pressed */ }
+        ),
+        decorationBox = { innerTextField ->
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(imageVector = Icons.Default.Search, contentDescription = "Search Icon")
+                Spacer(modifier = Modifier.width(8.dp))
+                Box(Modifier.fillMaxWidth()) {
+                    if (query.isEmpty()) {
+                        Text("Search emails", style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
+                    }
+                    innerTextField()
+                }
+            }
+        }
+    )
+}
+
+@Composable
+fun FilterDropdown(selectedTag: String, onTagSelected: (String) -> Unit) {
+    var expanded by remember { mutableStateOf(false) }
+    val tags = listOf("All", "Work", "Personal", "Events", "Promotions")
+
+    Box(
+        modifier = Modifier
+            .width(120.dp)
+            .background(MaterialTheme.colorScheme.surface, MaterialTheme.shapes.small)
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .clickable { expanded = !expanded }
+    ) {
+        Text(text = selectedTag, style = MaterialTheme.typography.bodyMedium, maxLines = 1)
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            tags.forEach { tag ->
+                DropdownMenuItem(
+                    text = { Text(tag) },
+                    onClick = {
+                        onTagSelected(tag)
+                        expanded = false
+                    }
+                )
+            }
         }
     }
 }
