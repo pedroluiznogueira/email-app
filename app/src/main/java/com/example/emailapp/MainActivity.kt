@@ -15,6 +15,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarBorder
@@ -22,6 +23,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -30,8 +32,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.example.emailapp.ui.theme.EmailAppTheme
 import java.time.LocalDate
+import java.time.YearMonth
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -257,6 +263,7 @@ fun CalendarScreen(navController: NavHostController) {
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
     var showDialog by remember { mutableStateOf(false) }
     var newEvent by remember { mutableStateOf("") }
+    var currentMonth by remember { mutableStateOf(YearMonth.now()) }
 
     Scaffold(
         topBar = {
@@ -274,8 +281,27 @@ fun CalendarScreen(navController: NavHostController) {
                 Column(
                     modifier = Modifier.fillMaxSize()
                 ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        IconButton(onClick = { currentMonth = currentMonth.minusMonths(1) }) {
+                            Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Previous Month")
+                        }
+                        Text(
+                            text = "${currentMonth.month.name} ${currentMonth.year}",
+                            style = MaterialTheme.typography.headlineMedium,
+                            modifier = Modifier.padding(8.dp)
+                        )
+                        IconButton(onClick = { currentMonth = currentMonth.plusMonths(1) }) {
+                            Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Next Month", modifier = Modifier.rotate(180f))
+                        }
+                    }
+
                     // Display calendar
                     CalendarView(
+                        yearMonth = currentMonth,
                         selectedDate = selectedDate,
                         onDateSelected = {
                             selectedDate = it
@@ -296,7 +322,9 @@ fun CalendarScreen(navController: NavHostController) {
                     ) {
                         events[selectedDate]?.let { eventList ->
                             items(eventList) { event ->
-                                EventItem(event)
+                                EventItem(event) {
+                                    events[selectedDate]?.remove(event)
+                                }
                             }
                         }
                     }
@@ -334,7 +362,7 @@ fun CalendarScreen(navController: NavHostController) {
 }
 
 @Composable
-fun EventItem(event: String) {
+fun EventItem(event: String, onDelete: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -343,25 +371,30 @@ fun EventItem(event: String) {
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
         shape = MaterialTheme.shapes.medium
     ) {
-        Text(
-            text = "Description: $event",
-            modifier = Modifier.padding(16.dp),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface
-        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Description: $event",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            IconButton(onClick = onDelete) {
+                Icon(imageVector = Icons.Default.Delete, contentDescription = "Delete Event")
+            }
+        }
     }
 }
 
 @Composable
-fun CalendarView(selectedDate: LocalDate, onDateSelected: (LocalDate) -> Unit) {
-    val daysInMonth = selectedDate.lengthOfMonth()
+fun CalendarView(yearMonth: YearMonth, selectedDate: LocalDate, onDateSelected: (LocalDate) -> Unit) {
+    val daysInMonth = yearMonth.lengthOfMonth()
 
     Column {
-        Text(
-            text = selectedDate.month.name,
-            style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.padding(8.dp)
-        )
         for (week in 0 until 5) { // Assuming 5 weeks per month
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -370,7 +403,7 @@ fun CalendarView(selectedDate: LocalDate, onDateSelected: (LocalDate) -> Unit) {
                 for (day in 1..7) {
                     val dayOfMonth = week * 7 + day
                     if (dayOfMonth <= daysInMonth) {
-                        val date = LocalDate.of(selectedDate.year, selectedDate.month, dayOfMonth)
+                        val date = LocalDate.of(yearMonth.year, yearMonth.month, dayOfMonth)
                         Box(
                             modifier = Modifier
                                 .size(40.dp)
