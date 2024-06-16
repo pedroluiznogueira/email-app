@@ -85,7 +85,7 @@ fun CalendarScreen(navController: NavHostController, viewModel: CalendarViewMode
                         events[selectedDate]?.let { eventList ->
                             items(eventList) { event ->
                                 EventItem(event.description) {
-                                    // Handle event deletion if necessary
+                                    viewModel.deleteEvent(event)
                                 }
                             }
                         }

@@ -19,4 +19,8 @@ class Repository(private val emailDao: EmailDao, private val eventDao: EventDao)
     suspend fun insertEvent(event: EventEntity) {
         eventDao.insertEvent(event)
     }
+
+    suspend fun deleteEvent(event: EventEntity) {
+        eventDao.deleteEvent(event)
+    }
 }

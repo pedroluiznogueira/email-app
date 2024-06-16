@@ -26,4 +26,12 @@ class CalendarViewModel(private val repository: Repository) : ViewModel() {
             repository.insertEvent(event)
         }
     }
+
+    fun deleteEvent(event: EventEntity) {
+        viewModelScope.launch {
+            repository.deleteEvent(event)
+            // Refresh the events for the currently selected date
+            getEventsForDate(event.date)
+        }
+    }
 }
